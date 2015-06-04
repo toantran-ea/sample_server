@@ -4,15 +4,19 @@
 
 
 from twisted.internet import reactor, protocol
-
+from threading import Thread
+from time import sleep
+from message_handler import MessageHandler
 
 class Echo(protocol.Protocol):
     """This is just about the simplest possible protocol"""
-    
+    def __init__(self):
+        self.message_handler = MessageHandler()
+
     def dataReceived(self, data):
-        print "dataReceived >> " + data
+        message = self.message_handler.handle(data)
         for c in self.factory.clients:
-            c.message(data)
+            c.message(message)
 
     def connectionMade(self):
         self.factory.clients.append(self)
@@ -20,8 +24,7 @@ class Echo(protocol.Protocol):
 
     def connectionLost(self, reason="aaaa"):
         print "client disconnected >>>>>>"
-        self.factory.clients.remove(self)
-        
+        self.factory.clients.remove(self) 
 
     def message(self, message):
         self.transport.write(message + '\n')
